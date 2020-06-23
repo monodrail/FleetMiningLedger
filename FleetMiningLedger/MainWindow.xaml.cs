@@ -1,6 +1,8 @@
 ﻿using Microsoft.Win32;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -17,6 +19,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
+
 namespace FleetMiningLedger
 {
     /// <summary>
@@ -25,11 +28,7 @@ namespace FleetMiningLedger
     public partial class MainWindow : Window
     {
         private OpenFileDialog fleetlog;
-        //List<string[]> lootinglog = new List<string[]>();
-        //List<string[]> precenselog = new List<string[]>();
-        List<string> members = new List<string>();
-        bool filled = false;
-
+        private Dictionary<string, Person> members = new Dictionary<string, Person>();
         private static readonly Regex desiredprecenseformat = new Regex(@"((?:[0-9]{2}:?){3}) - (.+) (joined|left)");
         private static readonly Regex desiredmemberformat = new Regex(@"((?:[0-9]{2}:?){3}) - (.+) (joined)");
         private static readonly Regex desiredlootingformat = new Regex(@"((?:[0-9]{2}:?){3}) (.+) (has looted) (.+) x (.+)(\r)");
@@ -47,78 +46,81 @@ namespace FleetMiningLedger
             fleetlog.Filter = "Text documents (.txt)|*.txt"; // Optional file extensions
             fleetlog.ShowDialog();
             file_location.Content = "Location: " + fleetlog.FileName;
-            filled = true;
         }
 
         private void Next_Click(object sender, RoutedEventArgs e)
         {
-            if (filled)
+            PersonList.Items.Clear();
+            PersonList_Enabled.Items.Clear();
+            if (fleetlog != null && fleetlog.FileName != "")
             {
-                //sr = new System.IO.StreamReader(fleetlog.FileName);
-                //MessageBox.Show(sr.ReadToEnd());
-                //sr.Close();
-                //Set_Data();
-                //MessageBox.Show("Data loaded");
-                Get_members_joined();
+                members = Get_members_joined();
+                foreach (KeyValuePair<string, Person> member in members)
+                {
+                    PersonList.Items.Add(new ListBoxItem() { Content = member.Key });
+                }
             }
 
         }
-        private void Set_Data()
+
+        private Dictionary<string, Person> Get_members_joined()
         {
-            //string test = File.ReadAllText(fleetlog.FileName);
-            //string[] lines = test.Split('\n');
-            //foreach(string line in lines)
-            //{
-            //    Match matchesprecence = desiredprecenseformat.Match(line);
-            //    Match matcheslooting = desiredlootingformat.Match(line);
-            //    if (matchesprecence.Success)
-            //    {
-            //        string[] temp_list = new string[3];
-            //        temp_list[0] = matchesprecence.Groups[1].Value;
-            //        temp_list[1] = matchesprecence.Groups[2].Value;
-            //        temp_list[2] = matchesprecence.Groups[3].Value;
-            //        precenselog.Add(temp_list);
-            //    }
-
-            //    if (matcheslooting.Success)
-            //    {
-            //        string[] temp_list = new string[5];
-            //        temp_list[0] = matcheslooting.Groups[1].Value;
-            //        temp_list[1] = matcheslooting.Groups[2].Value;
-            //        temp_list[2] = matcheslooting.Groups[3].Value;
-            //        temp_list[3] = matcheslooting.Groups[4].Value;
-            //        temp_list[4] = matcheslooting.Groups[5].Value;
-            //        lootinglog.Add(temp_list);
-            //    }
-            //}
-        }
-
-        private void Get_members_joined()
-        {            
             string member = File.ReadAllText(fleetlog.FileName);
             string[] lines = member.Split('\n');
+            Dictionary<string, Person> temp_members = new Dictionary<string, Person>();
             foreach (string line in lines)
             {
                 Match matchesmembers = desiredmemberformat.Match(line);
                 if (matchesmembers.Success)
                 {
-                    string member_to_add = matchesmembers.Groups[2].Value;
-                    if (members.Count < 1)
+                    if (!temp_members.ContainsKey(matchesmembers.Groups[2].Value))
                     {
-                        members.Add(member_to_add);
-                        combobox.Items.Add(member_to_add);
-
-
-                    }
-                    else if (!members.Contains(member_to_add))
-                    {
-                        members.Add(member_to_add);
-                        combobox.Items.Add(member_to_add);
+                        Person person = new Person()
+                        {
+                            name = matchesmembers.Groups[2].Value,
+                            role = "default",
+                            time_joined = DateTime.ParseExact(matchesmembers.Groups[1].Value, "HH:mm:ss", null).TimeOfDay,
+                            time_left = null,
+                            mining_dictionary = null
+                        };
+                        temp_members.Add(matchesmembers.Groups[2].Value, person);
                     }
                 }
             }
-            combobox.Visibility = Visibility.Visible;
+            return temp_members;
         }
-        
+
+        private void MoveRightBtn_Click(object sender, RoutedEventArgs e)
+        {
+            Stack<object> selectedStack = new Stack<object>();
+            foreach (object o in PersonList.SelectedItems)
+            {
+                selectedStack.Push(o);
+            }
+            while (selectedStack.TryPop(out object curr))
+            {
+                if (curr != null) {
+                    PersonList.Items.Remove(curr);
+                    PersonList_Enabled.Items.Add(curr);
+                }
+            }
+        }
+
+        private void MoveLeftBtn_Click(object sender, RoutedEventArgs e)
+        {
+            Stack<object> selectedStack = new Stack<object>();
+            foreach (object o in PersonList_Enabled.SelectedItems)
+            {
+                selectedStack.Push(o);
+            }
+            while (selectedStack.TryPop(out object curr))
+            {
+                if (curr != null)
+                {
+                    PersonList_Enabled.Items.Remove(curr);
+                    PersonList.Items.Add(curr);
+                }
+            }
+        }
     }
 }

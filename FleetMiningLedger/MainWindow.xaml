@@ -11,12 +11,21 @@
     <Grid>
         <Canvas Name="grid1">
             <Label Content="File location:" Height="40" Width="600" HorizontalAlignment="Left" Name="file_location" Margin="100,561,0,103" VerticalContentAlignment="Center"/>
-            <Label Content="Fleet Mining Ledger" HorizontalContentAlignment="Center" HorizontalAlignment="Center"  Height="33" FontWeight="Black" VerticalAlignment="Top" Width="777" />
+            <StackPanel Height="513" Width="500" Canvas.Left="100" Canvas.Top="48">
+                <TextBlock>All participants</TextBlock>
+                <ListBox x:Name="PersonList" Height="500" Width="500" Background="LightGray" SelectionMode="Multiple"/>
+            </StackPanel>
+            <Button Name="MoveRightBtn" Click="MoveRightBtn_Click" Height="51" Width="50" Canvas.Left="615" Canvas.Top="233"> -> </Button>
+            <Button Name="MoveLeftBtn" Click="MoveLeftBtn_Click" Height="50" Width="50" Canvas.Left="615" Canvas.Top="327" Content=" &lt;- " />
+            <StackPanel Height="513" Width="500" Canvas.Left="681" Canvas.Top="48" >
+                <TextBlock>Enabled participants</TextBlock>
+                <ListBox x:Name="PersonList_Enabled" Height="500" Width="500" Background="LightGray" SelectionMode="Multiple" />
+            </StackPanel>
+            <Label Content="Fleet Mining Ledger" HorizontalContentAlignment="Center" Height="33" FontWeight="Black" Width="776" Canvas.Left="252" Canvas.Top="10"/>
             <Button Content="Start calculation" FontWeight="Black" Margin="681,624,100,30" Click="Next_Click" Width="500
                     " Height="50"/>
             <Button Content="Load File" FontWeight="Black" Margin="100,624,680,30" Click="Load_File" Width="500
                     " Height="50"/>
-            <ComboBox HorizontalAlignment="Left" Margin="70,80,0,0" Width="250" Name="combobox" Visibility="Hidden"/>
         </Canvas>
     </Grid>
 </Window>
